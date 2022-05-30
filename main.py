@@ -3,6 +3,7 @@ from models import deneme
 from flask_cors import CORS
 import spacy
 from spacy.lang.en.examples import sentences
+from spacy.tokens import DocBin
 
 
 app = Flask(__name__)
@@ -28,13 +29,16 @@ def findData(nlp):
 def get_task(deneme_id):
     return deneme.find_by_id(deneme_id), 200
 
-
 @app.route('/deneme/', methods=['GET'])
 def add_tasks():
+    docs = [nlp('fgdgf fdlgfd')]
+    doc_bin = DocBin(docs=docs)
+    doc_bin.to_disk("./data.spacy")
         # title = request.form['title']
         # body = request.form['body']
     #response = deneme.create()
-    return jsonify(deneme.create()), 201
+    #return jsonify(deneme.create()), 201
+    return 'a'
 
 
 @app.route('/deneme/<string:deneme_id>/', methods=['PUT'])
