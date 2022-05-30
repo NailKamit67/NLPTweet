@@ -1,17 +1,7 @@
-from multiprocessing.dummy import Array
-import warnings
-from pydantic import Json
 from factory.database import Database
 import spacy
-from spacy import displacy
-from spacy.lang.en.examples import sentences
 import pandas as pd
-import random
-from spacy.util import minibatch, compounding
-from pathlib import Path
 from spacy.training.example import Example
-from spacy.tokens import DocBin
-from tqdm import tqdm
 from spacy.scorer import Scorer
 
 class Deneme(object):

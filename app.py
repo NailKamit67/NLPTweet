@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify
 from models import deneme
 from flask_cors import CORS
 import spacy
-from spacy import displacy
 from spacy.lang.en.examples import sentences
 
 
