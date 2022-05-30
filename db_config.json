@@ -1,0 +1,8 @@
+{
+    "db": {
+        "url" : "mongodb+srv://Deneme:VfVV5Fu4f4PFqjmh@cluster0.m1n2y.mongodb.net/nlpdb?retryWrites=true&w=majority",
+        "name" :"nlpdb",
+        "user" :"Deneme",
+        "password" :"VfVV5Fu4f4PFqjmh"
+    }
+}
