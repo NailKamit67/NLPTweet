@@ -1,1 +1,1 @@
-web: gunicorn wsgi:app-nlp-tweet -w 4
+web: gunicorn app:app-nlp-tweet
