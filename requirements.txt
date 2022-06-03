@@ -1,6 +1,6 @@
 Flask
-pymongo
 flask_cors
 gunicorn
 spacy
 pandas
+firebase-admin

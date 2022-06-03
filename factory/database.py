@@ -1,20 +1,23 @@
 from datetime import datetime
-from pymongo import MongoClient
 from bson import ObjectId
-
-from config import config
-
+import firebase_admin
+from firebase_admin import credentials,firestore
 
 class Database(object):
     def __init__(self):
-        self.client = MongoClient(config['db']['url'])
-        self.db = self.client[config['db']['name']]
+        credentialData = credentials.Certificate("factory/credentials.json")
+        firebase_admin.initialize_app(credentialData)
+        self.db = firestore.client()
 
-    def insert(self, element, collection_name):
+    def insert(self, element):
         element["created"] = datetime.now()
         element["updated"] = datetime.now()
-        inserted = self.db[collection_name].insert_one(element)
-        return str(inserted.inserted_id)
+
+        self.db.collection(u'nlpdb').add(element)
+        return 'Başarılı'
+
+    def get(self):
+        return self.db.collection(u'nlpdb').get()
 
     def find(self, criteria, collection_name, projection=None, sort=None, limit=0, cursor=False):
 
