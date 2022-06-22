@@ -1,5 +1,6 @@
 from cProfile import label
 from distutils.command.config import config
+from tkinter.tix import Tree
 
 from langcodes import Language
 from factory.database import Database
@@ -10,6 +11,12 @@ import pandas as pd
 from spacy.training.example import Example
 from spacy.scorer import Scorer
 from spacy.pipeline import EntityRuler
+
+from flair.datasets import UD_ENGLISH
+from flair.embeddings import WordEmbeddings, StackedEmbeddings
+from flair.models import SequenceTagger
+from flair.trainers import ModelTrainer
+from flair.data import Sentence
 
 class SpacyTrain(object):
     def __init__(self):
@@ -91,20 +98,26 @@ class SpacyTrain(object):
 
         
     def findData(self, request):
-        nlp = spacy.load(r".\output/model-best")
+        nlp = spacy.load("./trainData.spacy")
+        nlp2 = spacy.load('en_core_web_sm')
         test_text = str(request["text"])
         doc = nlp(test_text)
+        doc2 = nlp2(test_text)
         scorer = Scorer()
+        responses=[]
+        for item in doc2.ents:
+            print('*'*30)
+            print(item.label_ + " - " + item.text )
+            scr = scorer.score([Example.from_dict(doc, {'entities': [(int(test_text.index(item.text)), int(test_text.index(item.text))+len(item.text),item.label_ )]})])
+            responses.append({"label":item.label_, "text":item.text, "score": scr.get('ents_f')})
         examples = []
         ners =['SECRET','SEXUAL_LIFE', 'MAIL', 'POLITICS', 'WEALTH']
-        disp = displacy.render(doc, style="ent")
-        responses=[]
+        disp = displacy.render(doc2, style="ent")
         for ent in doc.ents:
-            responses.append({"label":ent.label_, "text":ent.text})
-            if ent.label_ in ners:
-                examples.append(Example.from_dict(doc, {'entities': [(int(test_text.index(ent.text)), int(test_text.index(ent.text))+len(ent.text),ent.label_ )]}))
-                self.db.insert({"text": test_text, "start_position_1": test_text.index(ent.text), "stop_position_1":test_text.index(ent.text) + len(ent.text), "category": ent.label_ , "score": scorer.score(examples), "start_position_2": 0,"start_position_3": 0,"stop_position_2": 0,"stop_position_3":0   })
-                self.controlData()
+            examples.append(Example.from_dict(doc, {'entities': [(int(test_text.index(ent.text)), int(test_text.index(ent.text))+len(ent.text),ent.label_ )]}))
+            scr = scorer.score([Example.from_dict(doc, {'entities': [(int(test_text.index(ent.text)), int(test_text.index(ent.text))+len(ent.text),ent.label_ )]})])
+            if(scr.get('ents_f') >= 0.5):
+                responses.append({"label":ent.label_, "text":ent.text, "score": scr.get('ents_f')})
         score = scorer.score(examples)
 
         return {"data": responses, "displacy": disp, "score": score}
@@ -146,22 +159,17 @@ class SpacyTrain(object):
         ner.add_label('MAIL')
         ner.add_label('POLITICS')
         ner.add_label('WEALTH')
-        print(ner.move_names)
         optimizer = nlp.create_optimizer()
         #other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "ner"]
         other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "ner"]
-        print("o"*30)
-        print(other_pipes)
         with nlp.disable_pipes(*other_pipes):
             examples = []
             losses = {}
             counter = 0
             for id, text, category, start_position_1,start_position_2,start_position_3,stop_position_1,stop_position_2,stop_position_3 in TRAIN_DATA.values:
                 counter+=1
-                print(counter)
-                print(text)
-                if(counter == 1000):
-                    break
+                # if(counter == 1000):
+                #     break
                 doc = nlp(text)
                 split = category.split(',')
                 example=[]
@@ -169,7 +177,6 @@ class SpacyTrain(object):
                     sentence = str(text)
                     word = sentence[int(start_position_1):].split(' ')[0]
                     example = Example.from_dict(doc, {'entities': [(int(start_position_1), int(start_position_1)+len(word),category)]})
-                    print(doc, {'entities': [(int(start_position_1), int(start_position_1)+len(word),category)]})
                 elif(len(split) == 2 and start_position_2 >=0 and stop_position_2 >=0):
                     sentence = str(text)
                     word1 = sentence[int(start_position_1):].split(' ')[0]
@@ -189,7 +196,18 @@ class SpacyTrain(object):
                 examples.append(example)
                 nlp.update([example], drop=0.3, sgd=optimizer, losses=losses)
             nlp.to_disk("./trainData.spacy")
-            print(losses)
-            print(scorer.score(examples))
         return scorer.score(examples)
 
+    def nerFlair(self):
+
+        # load the model you trained
+        model = SequenceTagger.load('resources/taggers/example-upos/final-model.pt')
+
+        # create example sentence
+        sentence = Sentence('I love Berlin')
+
+        # predict tags and print
+        model.predict(sentence)
+
+        print(sentence.to_tagged_string())
+        return {"data": 'corpus'}

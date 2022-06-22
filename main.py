@@ -18,6 +18,10 @@ def trainData():
 def trainData2():
     return jsonify(spacyTrain.ner2(True)), 200
 
+@app.route('/trainFlair', methods=['GET'])
+def trainData3():
+    return jsonify(spacyTrain.nerFlair()), 200
+
 @app.route('/tweetData', methods=['GET'])
 def tweetData():
     return jsonify(spacyTrain.tweetData()), 200
